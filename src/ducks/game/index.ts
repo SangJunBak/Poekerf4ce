@@ -64,6 +64,9 @@ const slice = createSlice({
         if (players.length < 2) {
           throw Error("Has to be more than 2 players");
         }
+        if (players.length >= 10) {
+          throw Error("Has to be less than 10 players");
+        }
         // Generate and Shuffle the cards
 
         // Set the cards in the players
