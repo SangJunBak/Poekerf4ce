@@ -2,22 +2,26 @@ import {
   INITIAL_SMALL_BLIND_AMOUNT,
   INITIAL_BIG_BLIND_AMOUNT,
 } from "../constants";
+import Card, { Suit, Rank } from "../types/card";
+import { Queue } from "../data-structures/queue";
 
 export function calculateInitialBlindAmounts(): [number, number] {
   //TODO
   return [INITIAL_SMALL_BLIND_AMOUNT, INITIAL_BIG_BLIND_AMOUNT];
 }
 
-export function swapElements<T>(list: T[], idx1: number, idx2: number) {
-  const temp = list[idx1];
-  list[idx1] = list[idx2];
-  list[idx2] = temp;
-}
-
-export function shuffleList<T>(list: T[]) {
-  const { length } = list;
-  for (let i = 0; i < length - 1; i++) {
-    let randomIdx = Math.floor(Math.random() * length - i) + i;
-    swapElements(list, i, randomIdx);
+export function generateShuffledCards() {
+  const listOfCards: Queue<Card> = new Queue();
+  for (let rank in Rank) {
+    if (isNaN(Number(rank))) {
+      for (let suit of Object.values(Suit)) {
+        listOfCards.enqueue({
+          suit: suit as Suit,
+          rank: (Rank[rank] as unknown) as Rank,
+        });
+      }
+    }
   }
+  listOfCards.shuffle();
+  return listOfCards;
 }

@@ -1,6 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { Card } from "../../types/card";
-import { calculateInitialBlindAmounts } from "../../helpers";
+import {
+  calculateInitialBlindAmounts,
+  generateShuffledCards,
+} from "../../helpers";
 import { INITIAL_DEALER_INDEX } from "../../constants";
 
 enum Phase {
@@ -49,9 +52,21 @@ type State = {
   players: Player[];
 };
 
-const initialState: {} = {
+export const initialState: State = {
   phase: null,
   cardsQueue: [],
+  bigBlindAmount: 0,
+  smallBlindAmount: 0,
+
+  phaseBet: 0,
+  dealerIndex: 0,
+  currentPlayerIndex: 0,
+  players: [],
+};
+
+type StartActionPayload = {
+  cards: Card[];
+  players: Player[];
 };
 
 const slice = createSlice({
@@ -59,28 +74,21 @@ const slice = createSlice({
   initialState,
   reducers: {
     start: {
-      prepare(payload) {
+      prepare(payload: StartActionPayload) {
         const { players } = payload;
-        if (players.length < 2) {
-          throw Error("Has to be more than 2 players");
-        }
-        if (players.length >= 10) {
-          throw Error("Has to be less than 10 players");
-        }
+        // if (players.length < 2) {
+        //   throw Error("Has to be more than 2 players");
+        // }
+        // if (players.length >= 10) {
+        //   throw Error("Has to be less than 10 players");
+        // }
         // Generate and Shuffle the cards
-
+        payload.cards = generateShuffledCards();
         // Set the cards in the players
 
         return { payload };
       },
-      reducer(
-        state,
-        action: PayloadAction<{
-          cards: Card[];
-          entryAmount: number;
-          players: Player[];
-        }>
-      ) {
+      reducer(state, action: PayloadAction<StartActionPayload>) {
         const { cards, players } = action.payload;
         // Calculate big blind and small blind depending on the entry amount
         const [
@@ -88,19 +96,17 @@ const slice = createSlice({
           bigBlindAmount,
         ] = calculateInitialBlindAmounts();
 
-        state = {
-          cardsQueue: cards,
-          phase: Phase.START,
-          players,
-          smallBlindAmount,
-          bigBlindAmount,
-          dealerIndex: INITIAL_DEALER_INDEX,
-        };
+        state.phase = Phase.START;
+        state.cardsQueue = cards;
+        state.players = players;
+        state.smallBlindAmount = smallBlindAmount;
+        state.bigBlindAmount = bigBlindAmount;
+        state.dealerIndex = INITIAL_DEALER_INDEX;
       },
     },
   },
 });
 
-export const { ...actions } = slice.actions;
+export const { start } = slice.actions;
 
 export default slice.reducer;
