@@ -91,7 +91,8 @@ export function goToNextPhase(state: Draft<State>) {
   //  - Set chipsBet to 0 other than small blind and big blind. (We can reuse start function)
   //  - Reveal the next card
 }
-function settleRound(state: Draft<State>) {
+
+export function settleRound(state: Draft<State>) {
   //  TODO: We have to set each player state between each phase change:
   //   - Calculate the winner,
   //   - Potentially increase smallblindAmount and bigBlindAmount

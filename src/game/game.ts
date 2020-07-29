@@ -8,7 +8,9 @@ import {
   goToNextPhase,
   isCheck,
   isPhaseOver,
+  isRiver,
   rotatePlayer,
+  settleRound,
 } from "./helpers";
 
 const initialState: State = {
@@ -64,7 +66,7 @@ export const slice = createSlice({
     // TODO: If the round has been settled and only one person has all the money,
     // TODO: Make a HOR for updateCurrentPlayer and whatever follows it
 
-    raise: (state, { bet }: PayloadAction<{ bet: number }>) => {
+    raise: (state, { payload: { bet } }: PayloadAction<{ bet: number }>) => {
       // TODO: Boundary check for bet and user's money
       rotatePlayer(state);
     },
@@ -74,11 +76,16 @@ export const slice = createSlice({
         call(state);
       }
 
-      if (isPhaseOver(state)) {
-        goToNextPhase(state);
-      } else {
+      if (!isPhaseOver(state)) {
         rotatePlayer(state);
+        return;
       }
+
+      if (isRiver(state)) {
+        settleRound(state);
+        return;
+      }
+      goToNextPhase(state);
     },
 
     fold: (state) => {
