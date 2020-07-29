@@ -6,6 +6,7 @@ import {
   call,
   getCurrentPlayer,
   goToNextPhase,
+  isCheck,
   isPhaseOver,
   rotatePlayer,
 } from "./helpers";
@@ -69,7 +70,10 @@ export const slice = createSlice({
     },
 
     call: (state) => {
-      call(state);
+      if (!isCheck(state)) {
+        call(state);
+      }
+
       if (isPhaseOver(state)) {
         goToNextPhase(state);
       } else {
@@ -77,8 +81,8 @@ export const slice = createSlice({
       }
     },
 
-    // TODO: If there's only one guy left after a fold, settle the round
     fold: (state) => {
+      // TODO: If there's only one guy left after a fold, settle the round
       getCurrentPlayer(state).folded = true;
 
       rotatePlayer(state);

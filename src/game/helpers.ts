@@ -2,6 +2,8 @@ import { numPhases, Player, State } from "./index";
 import { Draft } from "@reduxjs/toolkit";
 import { NUM_CARDS_DURING_RIVER } from "../constants";
 
+const insufficientFundsError = new Error("Insufficient funds to call");
+
 export function offsetIndexWithinRange(index = 0, offset = 0, range = 1) {
   return (index + offset + range) % range;
 }
@@ -47,18 +49,19 @@ export function isPhaseOver(state: Draft<State>) {
   );
 }
 
+export function isCheck(state: Draft<State>) {
+  const currentPlayer = getCurrentPlayer(state);
+  const maxBet = findMaxChipsBet(state);
+  return currentPlayer.chipsBet === maxBet;
+}
+
 export function call(state: Draft<State>) {
   const currentPlayer = getCurrentPlayer(state);
   const maxBet = findMaxChipsBet(state);
 
-  // This basically acts as a check
-  if (currentPlayer.chipsBet === maxBet) {
-    return;
-  }
-
   const newTotalChips = currentPlayer.chipsBet - maxBet;
   if (newTotalChips < 0) {
-    throw new Error("Insufficient funds to call");
+    throw insufficientFundsError;
   }
   currentPlayer.totalChips = newTotalChips;
   currentPlayer.chipsBet = maxBet;
@@ -86,16 +89,11 @@ export function goToNextPhase(state: Draft<State>) {
   // TODO:
   //  - Distribute chipsBet across everyone
   //  - Set chipsBet to 0 other than small blind and big blind. (We can reuse start function)
-  //  - Edit the cardsQueue We can use a switch.
   //  - Reveal the next card
 }
-
-//  TODO: We have to set each player state between each phase change:
-//   - Calculate the winner,
-//   - Potentially increase smallblindAmount and bigBlindAmount
-//   - Set currentPlayerPosition back to normal
-//   -
-function settleRound(state: Draft<State>) {}
-// This function distributes the chips bet and kicks people out if they've lost.
-// If everyone but one person is out of money, that person wins the game.
-// View should dispatch an action to end/reset the game.
+function settleRound(state: Draft<State>) {
+  //  TODO: We have to set each player state between each phase change:
+  //   - Calculate the winner,
+  //   - Potentially increase smallblindAmount and bigBlindAmount
+  //   - Set currentPlayerPosition back to normal
+}
