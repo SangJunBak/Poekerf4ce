@@ -44,6 +44,7 @@ export const slice = createSlice({
 
         return {
           payload: {
+            // TODO: Allow people to buy back in or leave whenever
             players: playerPayload,
             cards: generateShuffledCards(),
           },
@@ -53,8 +54,10 @@ export const slice = createSlice({
         initializeStartState(state, action);
       },
     },
-
+    // TODO: If it's river and this is the last person to go, settle the round
+    // TODO: If the round has been settled and only one person has all the money,
     // TODO: Make a HOR for updateCurrentPlayer and whatever follows it
+
     raise: (state, { bet }: PayloadAction<{ bet: number }>) => {
       updateCurrentPlayer(state);
     },
@@ -63,18 +66,11 @@ export const slice = createSlice({
       updateCurrentPlayer(state);
     },
 
+    // TODO: If there's only one guy left after a fold, end the round
     fold: (state) => {
       getCurrentPlayer(state).state = PlayerState.FOLDED;
 
       updateCurrentPlayer(state);
-    },
-    //TODO: Make this a helper function.
-    finishPhase: (state) => {
-      // If it's the river:
-      // 1) Calculate the winner
-
-      // Go to next phase
-      state.phase = goToNextPhase(state.phase!!);
     },
   },
 });

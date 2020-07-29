@@ -1,4 +1,4 @@
-import { State } from "./index";
+import { numPhases, Phase, Player, PlayerState, State } from "./index";
 import { Draft } from "@reduxjs/toolkit";
 
 export function offsetIndexWithinRange(index = 0, offset = 0, range = 0) {
@@ -27,13 +27,36 @@ export function getCurrentPlayer({
   return players[currentPlayerPosition];
 }
 
-export function updateCurrentPlayer(state: Draft<State>) {
-  // TODO: Keep rotating until the next player isn't folded. End the phase if all
-  //  of them are folded or if the playerPosition equals startingPlayerPosition.
+export function hasPlayerPlayed(
+  player: Player,
+  { smallBlindAmount }: Draft<State>
+) {
+  return player.chipsBet >= smallBlindAmount;
+}
 
-  state.currentPlayerPosition = offsetIndexWithinRange(
-    state.currentPlayerPosition,
-    -1,
-    state.players.length
-  );
+export function hasEveryonePlayed(state: Draft<State>) {
+  return state.players.every((player) => hasPlayerPlayed(player, state));
+}
+
+export function goToNextPhase(state: Draft<State>) {
+  state.phase = offsetIndexWithinRange(state.phase!!, 1, numPhases);
+}
+
+export function updateCurrentPlayer(state: Draft<State>) {
+  // Invariant: At least one person hasn't folded
+
+  const updateCurPlayerToLeft = () =>
+    offsetIndexWithinRange(
+      state.currentPlayerPosition,
+      -1,
+      state.players.length
+    );
+
+  const isCurrentPlayerFolded = () =>
+    getCurrentPlayer(state).state === PlayerState.FOLDED;
+
+  updateCurPlayerToLeft();
+  while (isCurrentPlayerFolded() && !hasEveryonePlayed(state)) {
+    updateCurPlayerToLeft();
+  }
 }
