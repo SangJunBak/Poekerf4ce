@@ -1,7 +1,8 @@
-import { numPhases, Phase, Player, State } from "./index";
+import { numPhases, Player, State } from "./index";
 import { Draft } from "@reduxjs/toolkit";
+import { NUM_CARDS_DURING_RIVER } from "../constants";
 
-export function offsetIndexWithinRange(index = 0, offset = 0, range = 0) {
+export function offsetIndexWithinRange(index = 0, offset = 0, range = 1) {
   return (index + offset + range) % range;
 }
 
@@ -20,6 +21,10 @@ export function getInitialPositions(
   };
 }
 
+export function isRiver({ cardsRevealed }: Draft<State>) {
+  return cardsRevealed.length === NUM_CARDS_DURING_RIVER;
+}
+
 export function getCurrentPlayer({
   players,
   currentPlayerPosition,
@@ -27,22 +32,39 @@ export function getCurrentPlayer({
   return players[currentPlayerPosition];
 }
 
-export function hasPlayerPlayed(
-  player: Player,
-  { smallBlindAmount }: Draft<State>
-) {
-  return player.chipsBet >= smallBlindAmount;
-}
-
 function somePlayerHasNotFolded({ players }: Draft<State>) {
   return players.some((player) => !player.folded);
 }
 
-export function hasEveryonePlayed(state: Draft<State>) {
-  return state.players.every((player) => hasPlayerPlayed(player, state));
+export function findMaxChipsBet({ players }: Draft<State>) {
+  return players.reduce((accum, { chipsBet }) => Math.max(accum, chipsBet), 0);
 }
 
-export function updateCurrentPlayer(state: Draft<State>) {
+export function isPhaseOver(state: Draft<State>) {
+  const maxBet = findMaxChipsBet(state);
+  return state.players.every(
+    (player) => player.folded || player.chipsBet === maxBet
+  );
+}
+
+export function call(state: Draft<State>) {
+  const currentPlayer = getCurrentPlayer(state);
+  const maxBet = findMaxChipsBet(state);
+
+  // This basically acts as a check
+  if (currentPlayer.chipsBet === maxBet) {
+    return;
+  }
+
+  const newTotalChips = currentPlayer.chipsBet - maxBet;
+  if (newTotalChips < 0) {
+    throw new Error("Insufficient funds to call");
+  }
+  currentPlayer.totalChips = newTotalChips;
+  currentPlayer.chipsBet = maxBet;
+}
+
+export function rotatePlayer(state: Draft<State>) {
   if (!somePlayerHasNotFolded(state)) {
     throw new Error("There must be at least one player who hasn't folded");
   }
@@ -61,10 +83,19 @@ export function updateCurrentPlayer(state: Draft<State>) {
 }
 
 export function goToNextPhase(state: Draft<State>) {
-  // TODO: If it's the river, settle the round
-  //  otherwise: go to the next phase
-  state.phase = offsetIndexWithinRange(state.phase!!, 1, numPhases);
+  // TODO:
+  //  - Distribute chipsBet across everyone
+  //  - Set chipsBet to 0 other than small blind and big blind. (We can reuse start function)
+  //  - Edit the cardsQueue We can use a switch.
+  //  - Reveal the next card
 }
 
-//TODO: Create a function called "Settle Round". This function distributes the chips bet and kicks people out if they've lost.
-//
+//  TODO: We have to set each player state between each phase change:
+//   - Calculate the winner,
+//   - Potentially increase smallblindAmount and bigBlindAmount
+//   - Set currentPlayerPosition back to normal
+//   -
+function settleRound(state: Draft<State>) {}
+// This function distributes the chips bet and kicks people out if they've lost.
+// If everyone but one person is out of money, that person wins the game.
+// View should dispatch an action to end/reset the game.

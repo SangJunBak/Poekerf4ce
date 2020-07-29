@@ -6,7 +6,7 @@ import {
 import Card, { Rank, Suit, RankList, SuitList } from "./card";
 import { shuffleList } from "../helpers";
 import { Draft, PayloadAction } from "@reduxjs/toolkit";
-import { Phase, Player, StartPayload, State } from "./index";
+import { Player, StartPayload, State } from "./index";
 import { getInitialPositions } from "./helpers";
 
 function calculateInitialBlindAmounts() {
@@ -64,6 +64,5 @@ export function initializeStartState(
     return newPlayerState;
   });
 
-  state.phase = Phase.START;
   state.cardsQueue = cards;
 }

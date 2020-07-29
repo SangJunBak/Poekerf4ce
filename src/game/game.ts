@@ -2,10 +2,16 @@ import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { generateShuffledCards, initializeStartState } from "./start";
 import { printO } from "../helpers";
 import { PlayerPayload, StartPayload, State } from "./index";
-import { getCurrentPlayer, updateCurrentPlayer } from "./helpers";
+import {
+  call,
+  getCurrentPlayer,
+  goToNextPhase,
+  isPhaseOver,
+  rotatePlayer,
+} from "./helpers";
 
 const initialState: State = {
-  phase: null,
+  cardsRevealed: [],
   cardsQueue: [],
   bigBlindAmount: 0,
   smallBlindAmount: 0,
@@ -23,7 +29,7 @@ function withPlayerAction<T>(
 ): ReducerCb<T> {
   return (state, action) => {
     reducer(state, action);
-    updateCurrentPlayer(state);
+    rotatePlayer(state);
   };
 }
 
@@ -58,19 +64,24 @@ export const slice = createSlice({
     // TODO: Make a HOR for updateCurrentPlayer and whatever follows it
 
     raise: (state, { bet }: PayloadAction<{ bet: number }>) => {
-      updateCurrentPlayer(state);
+      // TODO: Boundary check for bet and user's money
+      rotatePlayer(state);
     },
 
     call: (state) => {
-      // TODO: If max bet has been called and everyone has gone, change to next phase.
-      updateCurrentPlayer(state);
+      call(state);
+      if (isPhaseOver(state)) {
+        goToNextPhase(state);
+      } else {
+        rotatePlayer(state);
+      }
     },
 
     // TODO: If there's only one guy left after a fold, settle the round
     fold: (state) => {
       getCurrentPlayer(state).folded = true;
 
-      updateCurrentPlayer(state);
+      rotatePlayer(state);
     },
   },
 });

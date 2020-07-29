@@ -4,8 +4,9 @@ import { Card } from "./card";
 export const { start } = slice.actions;
 export default slice.reducer;
 
-export enum Phase {
-  // Initiated by start button, everyone has two cards
+// TODO: Deprecate entirely in favour of derived state.
+enum Phase {
+  // Initiated by start button, everyone has two cards, no cards are revealed
   START,
   // Initiated by a round of betting, 3 cards are revealed (use selectors for this)
   FLOP,
@@ -23,6 +24,8 @@ export type Player = {
   // Calculated in start reducer
   id: string;
   chipsBet: number;
+  // If total chips is 0, the player is out of the game. If we want to kick the person out,
+  // just edit the players list.
   totalChips: number;
   cards: Card[];
   folded: boolean;
@@ -31,7 +34,7 @@ export type Player = {
 export type PlayerPayload = Pick<Player, "id" | "totalChips">;
 
 export type State = {
-  phase: Phase | null;
+  cardsRevealed: Card[];
   cardsQueue: Card[];
   bigBlindAmount: number;
   smallBlindAmount: number;
