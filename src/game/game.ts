@@ -1,8 +1,7 @@
 import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
 import { generateShuffledCards, initializeStartState } from "./start";
 import { printO } from "../helpers";
-import { PlayerPayload, PlayerState, StartPayload, State } from "./index";
-import { goToNextPhase } from "./finishTurn";
+import { PlayerPayload, StartPayload, State } from "./index";
 import { getCurrentPlayer, updateCurrentPlayer } from "./helpers";
 
 const initialState: State = {
@@ -63,12 +62,13 @@ export const slice = createSlice({
     },
 
     call: (state) => {
+      // TODO: If max bet has been called and everyone has gone, change to next phase.
       updateCurrentPlayer(state);
     },
 
-    // TODO: If there's only one guy left after a fold, end the round
+    // TODO: If there's only one guy left after a fold, settle the round
     fold: (state) => {
-      getCurrentPlayer(state).state = PlayerState.FOLDED;
+      getCurrentPlayer(state).folded = true;
 
       updateCurrentPlayer(state);
     },

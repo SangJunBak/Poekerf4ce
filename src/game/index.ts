@@ -19,22 +19,13 @@ export enum Phase {
 
 export const numPhases = Object.keys(Phase).length;
 
-export enum PlayerState {
-  // Player is still in for the phase
-  ACTIVE,
-  // Player folded for the phase
-  FOLDED,
-  // Player is out for the entire game
-  INACTIVE,
-}
-
 export type Player = {
   // Calculated in start reducer
   id: string;
   chipsBet: number;
   totalChips: number;
   cards: Card[];
-  state: PlayerState;
+  folded: boolean;
 };
 
 export type PlayerPayload = Pick<Player, "id" | "totalChips">;
