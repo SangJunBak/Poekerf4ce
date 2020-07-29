@@ -1,4 +1,4 @@
-import { generateShuffledCards } from "./startHelpers";
+import { generateShuffledCards } from "./start";
 import { start } from "./index";
 import { dispatch } from "../store";
 import { playerFactory } from "./player";

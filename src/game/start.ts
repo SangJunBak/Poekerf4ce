@@ -6,7 +6,8 @@ import {
 import Card, { Rank, Suit, RankList, SuitList } from "./card";
 import { shuffleList } from "../helpers";
 import { Draft, PayloadAction } from "@reduxjs/toolkit";
-import { Phase, PlayerState, StartPayload, State } from "./index";
+import { Phase, Player, PlayerState, StartPayload, State } from "./index";
+import { getInitialPositions } from "./helpers";
 
 function calculateInitialBlindAmounts() {
   // TODO: Calculate big blind and small blind depending on the entry amount
@@ -34,17 +35,35 @@ export function initializeStartState(
   const { cards, players } = action.payload;
 
   const [smallBlindAmount, bigBlindAmount] = calculateInitialBlindAmounts();
+  // Blinds
+  state.smallBlindAmount = smallBlindAmount;
+  state.bigBlindAmount = bigBlindAmount;
+  // Positions
+  state.dealerPosition = INITIAL_DEALER_INDEX;
+  const {
+    smallBlindPosition,
+    bigBlindPosition,
+    startingPlayerPosition,
+  } = getInitialPositions(INITIAL_DEALER_INDEX, players.length);
+  state.currentPlayerPosition = startingPlayerPosition;
 
-  state.players = players.map((player) => ({
-    ...player,
-    chipsBet: 0,
-    state: PlayerState.ACTIVE,
-    cards: [cards.shift(), cards.shift()] as Card[],
-  }));
+  state.players = players.map((player, pos) => {
+    const newPlayerState: Player = {
+      ...player,
+      chipsBet: 0,
+      state: PlayerState.ACTIVE,
+      cards: [cards.shift(), cards.shift()] as Card[],
+    };
+
+    if (pos === smallBlindPosition) {
+      newPlayerState.chipsBet = smallBlindAmount;
+    } else if (pos === bigBlindPosition) {
+      newPlayerState.chipsBet = bigBlindAmount;
+    }
+
+    return newPlayerState;
+  });
 
   state.phase = Phase.START;
   state.cardsQueue = cards;
-  state.smallBlindAmount = smallBlindAmount;
-  state.bigBlindAmount = bigBlindAmount;
-  state.dealerIndex = INITIAL_DEALER_INDEX;
 }

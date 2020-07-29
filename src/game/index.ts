@@ -17,6 +17,8 @@ export enum Phase {
   END,
 }
 
+export const numPhases = Object.keys(Phase).length;
+
 export enum PlayerState {
   // Player is still in for the phase
   ACTIVE,
@@ -42,12 +44,10 @@ export type State = {
   cardsQueue: Card[];
   bigBlindAmount: number;
   smallBlindAmount: number;
-  // Bet put in for current phase
-  phaseBet: number;
 
   // Small blind is to the left of the dealer. Big blind is to the left of the small blind.
-  dealerIndex: number;
-  currentPlayerIndex: number;
+  dealerPosition: number;
+  currentPlayerPosition: number;
   players: Player[];
 };
 
