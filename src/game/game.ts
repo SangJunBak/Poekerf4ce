@@ -4,14 +4,17 @@ import { printO } from "../helpers";
 import { PlayerPayload, StartPayload, State } from "./index";
 import {
   call,
+  everyPlayerFolded,
   getCurrentPlayer,
   goToNextPhase,
   isCheck,
+  isGameOver,
   isPhaseOver,
   isRiver,
   rotatePlayer,
   settleRound,
 } from "./helpers";
+import { end } from "./end";
 
 const initialState: State = {
   cardsRevealed: [],
@@ -22,19 +25,8 @@ const initialState: State = {
   dealerPosition: 0,
   currentPlayerPosition: 0,
   players: [],
+  active: false,
 };
-
-type ReducerCb<T> = (state: Draft<State>, action?: PayloadAction<T>) => void;
-
-function withPlayerAction<T>(
-  reducer: ReducerCb<T>,
-  state: Draft<State>
-): ReducerCb<T> {
-  return (state, action) => {
-    reducer(state, action);
-    rotatePlayer(state);
-  };
-}
 
 export const slice = createSlice({
   name: "game",
@@ -62,8 +54,7 @@ export const slice = createSlice({
         initializeStartState(state, action);
       },
     },
-    // TODO: If it's river and this is the last person to go, settle the round
-    // TODO: If the round has been settled and only one person has all the money,
+    // TODO: If the round has been settled and only one person has all the money, end the game
     // TODO: Make a HOR for updateCurrentPlayer and whatever follows it
 
     raise: (state, { payload: { bet } }: PayloadAction<{ bet: number }>) => {
@@ -83,14 +74,24 @@ export const slice = createSlice({
 
       if (isRiver(state)) {
         settleRound(state);
+        if (isGameOver(state)) {
+          end(state);
+        }
         return;
       }
       goToNextPhase(state);
     },
 
     fold: (state) => {
-      // TODO: If there's only one guy left after a fold, settle the round
       getCurrentPlayer(state).folded = true;
+
+      if (everyPlayerFolded(state)) {
+        settleRound(state);
+        if (isGameOver(state)) {
+          end(state);
+        }
+        return;
+      }
 
       rotatePlayer(state);
     },

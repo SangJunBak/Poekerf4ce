@@ -65,4 +65,5 @@ export function initializeStartState(
   });
 
   state.cardsQueue = cards;
+  state.active = true;
 }

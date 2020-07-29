@@ -14,8 +14,6 @@ enum Phase {
   TURN,
   // Initiated by a round of betting, 5 cards are revealed
   RIVER,
-  // When the last call is initiated, user has to press quit to exit this stage
-  END,
 }
 
 export const numPhases = Object.keys(Phase).length;
@@ -39,10 +37,11 @@ export type State = {
   bigBlindAmount: number;
   smallBlindAmount: number;
 
-  // Small blind is to the left of the dealer. Big blind is to the left of the small blind.
   dealerPosition: number;
   currentPlayerPosition: number;
   players: Player[];
+
+  active: boolean;
 };
 
 export type StartPayload = {

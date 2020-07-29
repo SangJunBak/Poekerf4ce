@@ -34,8 +34,8 @@ export function getCurrentPlayer({
   return players[currentPlayerPosition];
 }
 
-function somePlayerHasNotFolded({ players }: Draft<State>) {
-  return players.some((player) => !player.folded);
+export function everyPlayerFolded({ players }: Draft<State>) {
+  return players.every(({ folded }) => folded);
 }
 
 export function findMaxChipsBet({ players }: Draft<State>) {
@@ -68,7 +68,7 @@ export function call(state: Draft<State>) {
 }
 
 export function rotatePlayer(state: Draft<State>) {
-  if (!somePlayerHasNotFolded(state)) {
+  if (everyPlayerFolded(state)) {
     throw new Error("There must be at least one player who hasn't folded");
   }
 
@@ -87,7 +87,6 @@ export function rotatePlayer(state: Draft<State>) {
 
 export function goToNextPhase(state: Draft<State>) {
   // TODO:
-  //  - Distribute chipsBet across everyone
   //  - Set chipsBet to 0 other than small blind and big blind. (We can reuse start function)
   //  - Reveal the next card
 }
@@ -95,6 +94,14 @@ export function goToNextPhase(state: Draft<State>) {
 export function settleRound(state: Draft<State>) {
   //  TODO: We have to set each player state between each phase change:
   //   - Calculate the winner,
+  //   - Distribute chipsBet across everyone
   //   - Potentially increase smallblindAmount and bigBlindAmount
   //   - Set currentPlayerPosition back to normal
+}
+
+export function isGameOver(state: Draft<State>) {
+  const numPlayersWithMoney = state.players.filter(
+    ({ totalChips }) => totalChips > 0
+  );
+  return numPlayersWithMoney.length === 1;
 }
