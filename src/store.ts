@@ -1,13 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { combineReducers } from "redux";
-import GameReducer from "./ducks/game";
-import PlayerReducer from "./ducks/players";
+import GameReducer from "./game";
 
 export const store = configureStore({
   reducer: combineReducers({
-    PlayerReducer,
     GameReducer,
   }),
 });
+
+export const { dispatch, getState } = store;
 
 export default store;

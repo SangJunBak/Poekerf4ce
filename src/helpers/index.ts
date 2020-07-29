@@ -1,11 +1,7 @@
-import {
-  INITIAL_SMALL_BLIND_AMOUNT,
-  INITIAL_BIG_BLIND_AMOUNT,
-} from "../constants";
+import util from "util";
 
-export function calculateInitialBlindAmounts(): [number, number] {
-  //TODO
-  return [INITIAL_SMALL_BLIND_AMOUNT, INITIAL_BIG_BLIND_AMOUNT];
+export function printO(obj: {}) {
+  console.log(util.inspect(obj, false, null, true));
 }
 
 export function swapElements<T>(list: T[], idx1: number, idx2: number) {

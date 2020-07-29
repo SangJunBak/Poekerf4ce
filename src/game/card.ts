@@ -5,6 +5,8 @@ export enum Suit {
   DIAMONDS = "Diamonds",
 }
 
+export const SuitList = Object.values(Suit);
+
 export enum Rank {
   TWO = 2,
   THREE = 3,
@@ -20,6 +22,10 @@ export enum Rank {
   KING = 13,
   ACE = 14,
 }
+
+export const RankList = Object.values(Rank).filter(
+  (val) => !isNaN(Number(val))
+);
 
 export type Card = {
   suit: Suit;
