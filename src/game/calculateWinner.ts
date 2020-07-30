@@ -17,6 +17,10 @@ enum Hands {
   STRAIGHT_FLUSH,
 }
 
+// TODO:
+//  - Calculate all 'winners'
+//  - Divide side-pot etc. (incorporates all-in)
+
 export function calculateWinner(state: Draft<State>) {
   if (state.cardsRevealed.length !== Phase.RIVER) {
     throw new Error("Cards revealed isn't 5");
@@ -27,5 +31,3 @@ export function calculateWinner(state: Draft<State>) {
 
   const activePlayers = state.players.filter(isPlayerActive);
 }
-
-[[], [], []];

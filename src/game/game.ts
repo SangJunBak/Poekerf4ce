@@ -29,6 +29,7 @@ const initialState: State = {
   active: false,
 };
 
+// TODO: Separate out more actions/reducers to incorporate animations
 export const slice = createSlice({
   name: "game",
   initialState,
