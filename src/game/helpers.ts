@@ -2,12 +2,12 @@ import { Phase, Player, State } from "./index";
 import { Draft } from "@reduxjs/toolkit";
 import {
   BIG_BLIND_DISTANCE_FROM_DEALER,
-  NUM_CARDS_DURING_RIVER,
   SMALL_BLIND_DISTANCE_FROM_DEALER,
   STARTING_PLAYER_DISTANCE_FROM_DEALER,
 } from "../constants";
 import { calculateBlindAmounts } from "./start";
 import Card from "./card";
+import { calculateWinner } from "./calculateWinner";
 
 export const insufficientFundsError = new Error("Insufficient funds");
 
@@ -78,7 +78,7 @@ function revealCards(state: Draft<State>, numCards: number) {
 }
 
 export function isRiver({ cardsRevealed }: Draft<State>) {
-  return cardsRevealed.length === NUM_CARDS_DURING_RIVER;
+  return cardsRevealed.length === Phase.RIVER;
 }
 
 export function getCurrentPlayer({
@@ -88,8 +88,12 @@ export function getCurrentPlayer({
   return players[currentPlayerPosition];
 }
 
-export function everyPlayerFolded({ players }: Draft<State>) {
-  return players.every(({ folded }) => folded);
+export function isPlayerActive(player: Player) {
+  return !player.folded && player.totalChips > 0;
+}
+
+export function everyPlayerInactive({ players }: Draft<State>) {
+  return players.every((player) => !isPlayerActive(player));
 }
 
 export function findMaxChipsBet({ players }: Draft<State>) {
@@ -99,7 +103,7 @@ export function findMaxChipsBet({ players }: Draft<State>) {
 export function isPhaseOver(state: Draft<State>) {
   const maxBet = findMaxChipsBet(state);
   return state.players.every(
-    (player) => player.folded || player.chipsBet === maxBet
+    (player) => !isPlayerActive(player) || player.chipsBet === maxBet
   );
 }
 
@@ -136,12 +140,12 @@ export function call(state: Draft<State>) {
 }
 
 export function rotatePlayer(state: Draft<State>) {
-  if (everyPlayerFolded(state)) {
-    throw new Error("There must be at least one player who hasn't folded");
+  if (everyPlayerInactive(state)) {
+    throw new Error("There must be at least one player who is active");
   }
 
   movePositionToLeft(state, "currentPlayerPosition");
-  while (getCurrentPlayer(state).folded) {
+  while (!isPlayerActive(getCurrentPlayer(state))) {
     movePositionToLeft(state, "currentPlayerPosition");
   }
 }
@@ -166,9 +170,13 @@ export function goToNextPhase(state: Draft<State>) {
 }
 
 export function settleRound(state: Draft<State>) {
+  if (!isRiver(state)) {
+    const numCardsMissing = Phase.RIVER - state.cardsRevealed.length;
+    revealCards(state, numCardsMissing);
+  }
+  calculateWinner(state);
+
   //  TODO: We have to set each player state between each phase change:
-  //   - Invariant: cardsRevealed isn't necessarily 5
-  //   - Account for the case where everyone folded early or everyone was all in
   //   - Calculate the winner,
   //   - Distribute chipsBet across everyone
   initializeNewRound(state);

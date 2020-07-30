@@ -4,7 +4,7 @@ import { printO } from "../helpers";
 import { PlayerPayload, StartPayload, State } from "./index";
 import {
   call,
-  everyPlayerFolded,
+  everyPlayerInactive,
   getCurrentPlayer,
   goToNextPhase,
   isCheck,
@@ -86,7 +86,7 @@ export const slice = createSlice({
     fold: (state) => {
       getCurrentPlayer(state).folded = true;
 
-      if (everyPlayerFolded(state)) {
+      if (everyPlayerInactive(state)) {
         settleRound(state);
         if (isGameOver(state)) {
           end(state);
