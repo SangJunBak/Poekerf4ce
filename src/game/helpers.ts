@@ -1,4 +1,4 @@
-import { Player, State } from "./index";
+import { Phase, Player, State } from "./index";
 import { Draft } from "@reduxjs/toolkit";
 import {
   BIG_BLIND_DISTANCE_FROM_DEALER,
@@ -6,6 +6,8 @@ import {
   SMALL_BLIND_DISTANCE_FROM_DEALER,
   STARTING_PLAYER_DISTANCE_FROM_DEALER,
 } from "../constants";
+import { calculateBlindAmounts } from "./start";
+import Card from "./card";
 
 export const insufficientFundsError = new Error("Insufficient funds");
 
@@ -34,6 +36,30 @@ export function calculatePositions(state: Draft<State>) {
   };
 }
 
+export function initializeNewPhase(state: Draft<State>) {
+  const {
+    smallBlindPosition,
+    bigBlindPosition,
+    startingPlayerPosition,
+  } = calculatePositions(state);
+
+  state.currentPlayerPosition = startingPlayerPosition;
+
+  const [smallBlindAmount, bigBlindAmount] = calculateBlindAmounts();
+  state.smallBlindAmount = smallBlindAmount;
+  state.bigBlindAmount = bigBlindAmount;
+
+  state.players.forEach((player, pos) => {
+    if (pos === smallBlindPosition) {
+      withdrawPlayerChips(state, player, smallBlindAmount);
+    } else if (pos === bigBlindPosition) {
+      withdrawPlayerChips(state, player, bigBlindAmount);
+    } else {
+      player.chipsBet = 0;
+    }
+  });
+}
+
 function movePositionToLeft(
   state: Draft<State>,
   positionType: "dealerPosition" | "currentPlayerPosition"
@@ -43,6 +69,12 @@ function movePositionToLeft(
     -1,
     state.players.length
   );
+}
+
+function revealCards(state: Draft<State>, numCards: number) {
+  for (let i = 0; i < numCards; i++) {
+    state.cardsRevealed.push(state.cardsQueue.shift() as Card);
+  }
 }
 
 export function isRiver({ cardsRevealed }: Draft<State>) {
@@ -82,6 +114,7 @@ export function withdrawPlayerChips(
   player: Player,
   amount: number
 ) {
+  // TODO: Needs to account for the all-in case
   const newTotalChips = player.chipsBet - amount;
   if (newTotalChips < 0) {
     throw insufficientFundsError;
@@ -98,7 +131,6 @@ export function withdrawCurrentPlayerChips(
 }
 
 export function call(state: Draft<State>) {
-  // TODO: Needs to account for the all-in case
   const maxBet = findMaxChipsBet(state);
   withdrawCurrentPlayerChips(state, maxBet);
 }
@@ -116,11 +148,21 @@ export function rotatePlayer(state: Draft<State>) {
 
 export function goToNextPhase(state: Draft<State>) {
   movePositionToLeft(state, "dealerPosition");
+  initializeNewPhase(state);
 
-  // TODO:
-  //  - Shift the positions of dealer, small blind, big blind, and current user
-  //  - Set chipsBet to 0 other than small blind and big blind. (We can reuse start function)
-  //  - Reveal the next card
+  switch (state.cardsRevealed.length) {
+    case Phase.START:
+      revealCards(state, 3);
+      break;
+    case Phase.FLOP:
+    case Phase.TURN:
+      revealCards(state, 1);
+      break;
+    case Phase.RIVER:
+      throw new Error("Function shouldn't be called during the River");
+    default:
+      throw new Error("Incorrect number of cardsRevealed");
+  }
 }
 
 export function settleRound(state: Draft<State>) {

@@ -9,11 +9,12 @@ import { Draft, PayloadAction } from "@reduxjs/toolkit";
 import { Player, StartPayload, State } from "./index";
 import {
   calculatePositions,
+  initializeNewPhase,
   insufficientFundsError,
   withdrawPlayerChips,
 } from "./helpers";
 
-function calculateInitialBlindAmounts() {
+export function calculateBlindAmounts() {
   // TODO: Calculate big blind and small blind depending on the entry amount
   return [INITIAL_SMALL_BLIND_AMOUNT, INITIAL_BIG_BLIND_AMOUNT];
 }
@@ -38,24 +39,7 @@ export function initializeStartState(
 ) {
   const { cards, players } = action.payload;
 
-  if (players.some(({ totalChips }) => totalChips < bigBlindAmount)) {
-    throw insufficientFundsError;
-  }
-
   state.active = true;
-  const [smallBlindAmount, bigBlindAmount] = calculateInitialBlindAmounts();
-  // Blinds
-  state.smallBlindAmount = smallBlindAmount;
-  state.bigBlindAmount = bigBlindAmount;
-  // Positions
-  state.dealerPosition = INITIAL_DEALER_INDEX;
-  const {
-    smallBlindPosition,
-    bigBlindPosition,
-    startingPlayerPosition,
-  } = calculatePositions(state);
-
-  state.currentPlayerPosition = startingPlayerPosition;
 
   state.players = players.map((player, pos) => {
     const newPlayerState: Player = {
@@ -64,15 +48,12 @@ export function initializeStartState(
       folded: false,
       cards: [cards.shift(), cards.shift()] as Card[],
     };
-
-    if (pos === smallBlindPosition) {
-      withdrawPlayerChips(state, newPlayerState, smallBlindAmount);
-    } else if (pos === bigBlindPosition) {
-      withdrawPlayerChips(state, newPlayerState, bigBlindAmount);
-    }
-
     return newPlayerState;
   });
 
   state.cardsQueue = cards;
+
+  // Positions
+  state.dealerPosition = INITIAL_DEALER_INDEX;
+  initializeNewPhase(state);
 }

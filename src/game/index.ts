@@ -4,12 +4,11 @@ import { Card } from "./card";
 export const { start } = slice.actions;
 export default slice.reducer;
 
-// TODO: Deprecate entirely in favour of derived state.
-enum Phase {
+export enum Phase {
   // Initiated by start button, everyone has two cards, no cards are revealed
-  START,
+  START = 0,
   // Initiated by a round of betting, 3 cards are revealed (use selectors for this)
-  FLOP,
+  FLOP = 3,
   // Initiated by a round of betting, 4 cards are revealed
   TURN,
   // Initiated by a round of betting, 5 cards are revealed
