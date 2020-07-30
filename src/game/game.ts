@@ -55,6 +55,9 @@ export const slice = createSlice({
         initializeStartState(state, action);
       },
     },
+    // TODO:
+    //  - If the player has gone all-in, they shouldn't be able to raise, call, or fold
+    //  - If everyone is all-in, we should settle the round
     raise: (state, { payload: { bet } }: PayloadAction<{ bet: number }>) => {
       withdrawCurrentPlayerChips(state, bet);
       rotatePlayer(state);

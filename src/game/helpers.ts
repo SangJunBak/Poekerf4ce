@@ -36,7 +36,7 @@ export function calculatePositions(state: Draft<State>) {
   };
 }
 
-export function initializeNewPhase(state: Draft<State>) {
+export function initializeNewRound(state: Draft<State>) {
   const {
     smallBlindPosition,
     bigBlindPosition,
@@ -148,7 +148,7 @@ export function rotatePlayer(state: Draft<State>) {
 
 export function goToNextPhase(state: Draft<State>) {
   movePositionToLeft(state, "dealerPosition");
-  initializeNewPhase(state);
+  initializeNewRound(state);
 
   switch (state.cardsRevealed.length) {
     case Phase.START:
@@ -167,10 +167,11 @@ export function goToNextPhase(state: Draft<State>) {
 
 export function settleRound(state: Draft<State>) {
   //  TODO: We have to set each player state between each phase change:
+  //   - Invariant: cardsRevealed isn't necessarily 5
+  //   - Account for the case where everyone folded early or everyone was all in
   //   - Calculate the winner,
   //   - Distribute chipsBet across everyone
-  //   - Increase smallblindAmount and bigBlindAmount
-  //   - Set currentPlayerPosition back to normal
+  initializeNewRound(state);
 }
 
 export function isGameOver(state: Draft<State>) {

@@ -9,7 +9,7 @@ import { Draft, PayloadAction } from "@reduxjs/toolkit";
 import { Player, StartPayload, State } from "./index";
 import {
   calculatePositions,
-  initializeNewPhase,
+  initializeNewRound,
   insufficientFundsError,
   withdrawPlayerChips,
 } from "./helpers";
@@ -55,5 +55,5 @@ export function initializeStartState(
 
   // Positions
   state.dealerPosition = INITIAL_DEALER_INDEX;
-  initializeNewPhase(state);
+  initializeNewRound(state);
 }
