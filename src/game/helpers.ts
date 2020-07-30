@@ -1,8 +1,8 @@
 import { numPhases, Player, State } from "./index";
-import { Draft } from "@reduxjs/toolkit";
+import { Draft, PayloadAction } from "@reduxjs/toolkit";
 import { NUM_CARDS_DURING_RIVER } from "../constants";
 
-const insufficientFundsError = new Error("Insufficient funds to call");
+export const insufficientFundsError = new Error("Insufficient funds");
 
 export function offsetIndexWithinRange(index = 0, offset = 0, range = 1) {
   return (index + offset + range) % range;
@@ -55,16 +55,23 @@ export function isCheck(state: Draft<State>) {
   return currentPlayer.chipsBet === maxBet;
 }
 
-export function call(state: Draft<State>) {
+export function withdrawCurrentPlayerChips(
+  state: Draft<State>,
+  amount: number
+) {
   const currentPlayer = getCurrentPlayer(state);
-  const maxBet = findMaxChipsBet(state);
-
-  const newTotalChips = currentPlayer.chipsBet - maxBet;
+  const newTotalChips = currentPlayer.chipsBet - amount;
   if (newTotalChips < 0) {
     throw insufficientFundsError;
   }
   currentPlayer.totalChips = newTotalChips;
-  currentPlayer.chipsBet = maxBet;
+  currentPlayer.chipsBet += amount;
+}
+
+export function call(state: Draft<State>) {
+  // TODO: Needs to account for the all-in case
+  const maxBet = findMaxChipsBet(state);
+  withdrawCurrentPlayerChips(state, maxBet);
 }
 
 export function rotatePlayer(state: Draft<State>) {

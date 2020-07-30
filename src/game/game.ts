@@ -1,4 +1,4 @@
-import { createSlice, Draft, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { generateShuffledCards, initializeStartState } from "./start";
 import { printO } from "../helpers";
 import { PlayerPayload, StartPayload, State } from "./index";
@@ -13,6 +13,7 @@ import {
   isRiver,
   rotatePlayer,
   settleRound,
+  withdrawCurrentPlayerChips,
 } from "./helpers";
 import { end } from "./end";
 
@@ -54,11 +55,8 @@ export const slice = createSlice({
         initializeStartState(state, action);
       },
     },
-    // TODO: If the round has been settled and only one person has all the money, end the game
-    // TODO: Make a HOR for updateCurrentPlayer and whatever follows it
-
     raise: (state, { payload: { bet } }: PayloadAction<{ bet: number }>) => {
-      // TODO: Boundary check for bet and user's money
+      withdrawCurrentPlayerChips(state, bet);
       rotatePlayer(state);
     },
 
