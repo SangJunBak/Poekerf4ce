@@ -7,7 +7,11 @@ import Card, { Rank, Suit, RankList, SuitList } from "./card";
 import { shuffleList } from "../helpers";
 import { Draft, PayloadAction } from "@reduxjs/toolkit";
 import { Player, StartPayload, State } from "./index";
-import { getInitialPositions } from "./helpers";
+import {
+  calculatePositions,
+  insufficientFundsError,
+  withdrawPlayerChips,
+} from "./helpers";
 
 function calculateInitialBlindAmounts() {
   // TODO: Calculate big blind and small blind depending on the entry amount
@@ -34,6 +38,11 @@ export function initializeStartState(
 ) {
   const { cards, players } = action.payload;
 
+  if (players.some(({ totalChips }) => totalChips < bigBlindAmount)) {
+    throw insufficientFundsError;
+  }
+
+  state.active = true;
   const [smallBlindAmount, bigBlindAmount] = calculateInitialBlindAmounts();
   // Blinds
   state.smallBlindAmount = smallBlindAmount;
@@ -44,7 +53,8 @@ export function initializeStartState(
     smallBlindPosition,
     bigBlindPosition,
     startingPlayerPosition,
-  } = getInitialPositions(INITIAL_DEALER_INDEX, players.length);
+  } = calculatePositions(state);
+
   state.currentPlayerPosition = startingPlayerPosition;
 
   state.players = players.map((player, pos) => {
@@ -56,14 +66,13 @@ export function initializeStartState(
     };
 
     if (pos === smallBlindPosition) {
-      newPlayerState.chipsBet = smallBlindAmount;
+      withdrawPlayerChips(state, newPlayerState, smallBlindAmount);
     } else if (pos === bigBlindPosition) {
-      newPlayerState.chipsBet = bigBlindAmount;
+      withdrawPlayerChips(state, newPlayerState, bigBlindAmount);
     }
 
     return newPlayerState;
   });
 
   state.cardsQueue = cards;
-  state.active = true;
 }

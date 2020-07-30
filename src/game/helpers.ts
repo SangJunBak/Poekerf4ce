@@ -1,6 +1,11 @@
-import { numPhases, Player, State } from "./index";
-import { Draft, PayloadAction } from "@reduxjs/toolkit";
-import { NUM_CARDS_DURING_RIVER } from "../constants";
+import { Player, State } from "./index";
+import { Draft } from "@reduxjs/toolkit";
+import {
+  BIG_BLIND_DISTANCE_FROM_DEALER,
+  NUM_CARDS_DURING_RIVER,
+  SMALL_BLIND_DISTANCE_FROM_DEALER,
+  STARTING_PLAYER_DISTANCE_FROM_DEALER,
+} from "../constants";
 
 export const insufficientFundsError = new Error("Insufficient funds");
 
@@ -8,19 +13,36 @@ export function offsetIndexWithinRange(index = 0, offset = 0, range = 1) {
   return (index + offset + range) % range;
 }
 
-export function getInitialPositions(
-  dealerPosition: number,
-  numPlayers: number
-) {
+export function calculatePositions(state: Draft<State>) {
+  const numPlayers = state.players.length;
   return {
-    smallBlindPosition: offsetIndexWithinRange(dealerPosition, -1, numPlayers),
-    bigBlindPosition: offsetIndexWithinRange(dealerPosition, -2, numPlayers),
+    smallBlindPosition: offsetIndexWithinRange(
+      state.dealerPosition,
+      SMALL_BLIND_DISTANCE_FROM_DEALER,
+      numPlayers
+    ),
+    bigBlindPosition: offsetIndexWithinRange(
+      state.dealerPosition,
+      BIG_BLIND_DISTANCE_FROM_DEALER,
+      numPlayers
+    ),
     startingPlayerPosition: offsetIndexWithinRange(
-      dealerPosition,
-      -3,
+      state.dealerPosition,
+      STARTING_PLAYER_DISTANCE_FROM_DEALER,
       numPlayers
     ),
   };
+}
+
+function movePositionToLeft(
+  state: Draft<State>,
+  positionType: "dealerPosition" | "currentPlayerPosition"
+) {
+  state[positionType] = offsetIndexWithinRange(
+    state[positionType],
+    -1,
+    state.players.length
+  );
 }
 
 export function isRiver({ cardsRevealed }: Draft<State>) {
@@ -55,17 +77,24 @@ export function isCheck(state: Draft<State>) {
   return currentPlayer.chipsBet === maxBet;
 }
 
+export function withdrawPlayerChips(
+  state: Draft<State>,
+  player: Player,
+  amount: number
+) {
+  const newTotalChips = player.chipsBet - amount;
+  if (newTotalChips < 0) {
+    throw insufficientFundsError;
+  }
+  player.totalChips = newTotalChips;
+  player.chipsBet += amount;
+}
+
 export function withdrawCurrentPlayerChips(
   state: Draft<State>,
   amount: number
 ) {
-  const currentPlayer = getCurrentPlayer(state);
-  const newTotalChips = currentPlayer.chipsBet - amount;
-  if (newTotalChips < 0) {
-    throw insufficientFundsError;
-  }
-  currentPlayer.totalChips = newTotalChips;
-  currentPlayer.chipsBet += amount;
+  withdrawPlayerChips(state, getCurrentPlayer(state), amount);
 }
 
 export function call(state: Draft<State>) {
@@ -79,21 +108,17 @@ export function rotatePlayer(state: Draft<State>) {
     throw new Error("There must be at least one player who hasn't folded");
   }
 
-  const updateCurPlayerToLeft = () =>
-    offsetIndexWithinRange(
-      state.currentPlayerPosition,
-      -1,
-      state.players.length
-    );
-
-  updateCurPlayerToLeft();
+  movePositionToLeft(state, "currentPlayerPosition");
   while (getCurrentPlayer(state).folded) {
-    updateCurPlayerToLeft();
+    movePositionToLeft(state, "currentPlayerPosition");
   }
 }
 
 export function goToNextPhase(state: Draft<State>) {
+  movePositionToLeft(state, "dealerPosition");
+
   // TODO:
+  //  - Shift the positions of dealer, small blind, big blind, and current user
   //  - Set chipsBet to 0 other than small blind and big blind. (We can reuse start function)
   //  - Reveal the next card
 }
@@ -102,7 +127,7 @@ export function settleRound(state: Draft<State>) {
   //  TODO: We have to set each player state between each phase change:
   //   - Calculate the winner,
   //   - Distribute chipsBet across everyone
-  //   - Potentially increase smallblindAmount and bigBlindAmount
+  //   - Increase smallblindAmount and bigBlindAmount
   //   - Set currentPlayerPosition back to normal
 }
 
