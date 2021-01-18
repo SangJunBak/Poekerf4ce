@@ -18,8 +18,8 @@ export enum Phase {
 export const numPhases = Object.keys(Phase).length;
 
 export type Player = {
-  // Calculated in start reducer
   id: string;
+  // Number of chips bet
   chipsBet: number;
   // If total chips is 0, the player is out of the game. If we want to kick the person out,
   // just edit the players list.
@@ -31,11 +31,10 @@ export type Player = {
 export type PlayerPayload = Pick<Player, "id" | "totalChips">;
 
 export type State = {
-  cardsRevealed: Card[];
-  cardsQueue: Card[];
-  bigBlindAmount: number;
-  smallBlindAmount: number;
-
+  cardsRevealed: Card[]; // Shared cards between players
+  cardsQueue: Card[]; // Next cards to be shown
+  bigBlindAmount: number; // The amount that the player who's the big blind needs to pay
+  smallBlindAmount: number; // The amount that the player who's the small blind needs to pay
   dealerPosition: number;
   currentPlayerPosition: number;
   players: Player[];
